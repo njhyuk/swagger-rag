@@ -4,5 +4,5 @@ data class ApiDocChunk(
     val path: String,
     val method: String,
     val text: String,
-    val embedding: List<Float>? = null
+    val embedding: List<Double>? = null
 ) 

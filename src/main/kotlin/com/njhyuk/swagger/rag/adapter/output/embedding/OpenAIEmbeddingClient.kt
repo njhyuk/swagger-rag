@@ -13,12 +13,12 @@ class OpenAIEmbeddingClient {
     private val openAI = OpenAI(apiKey)
     private val model = ModelId("text-embedding-ada-002")
 
-    fun embed(text: String): List<Float> = runBlocking {
+    fun embed(text: String): List<Double> = runBlocking {
         val request = EmbeddingRequest(
             model = model,
             input = listOf(text)
         )
         val response = openAI.embeddings(request)
-        response.embeddings.firstOrNull()?.embedding?.map { it.toFloat() } ?: emptyList()
+        response.embeddings.firstOrNull()?.embedding ?: emptyList()
     }
 } 

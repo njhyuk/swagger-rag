@@ -2,6 +2,7 @@ package com.njhyuk.swagger.rag.controller
 
 import com.njhyuk.swagger.rag.usecase.QueryAnswerUseCase
 import com.njhyuk.swagger.rag.usecase.ParseSwaggerUseCase
+import com.njhyuk.swagger.rag.usecase.ChunkRepository
 import com.njhyuk.swagger.rag.infrastructure.FileLoader
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
@@ -10,13 +11,14 @@ import org.springframework.stereotype.Component
 class ChatCommandLineController(
     private val queryAnswerUseCase: QueryAnswerUseCase,
     private val parseSwaggerUseCase: ParseSwaggerUseCase,
+    private val chunkRepository: ChunkRepository,
     private val fileLoader: FileLoader
 ) : CommandLineRunner {
     override fun run(vararg args: String?) {
         // Swagger 파일 로드 및 파싱
         val file = fileLoader.load("openapi/sample-api.json")
         val chunks = parseSwaggerUseCase.parse(file)
-        queryAnswerUseCase.loadChunks(chunks)
+        chunkRepository.setChunks(chunks)
 
         println("Swagger 파일을 불러왔습니다. 질문을 입력하세요.")
         while (true) {
