@@ -1,14 +1,14 @@
 # swagger-rag
 
-Spring Boot + Kotlin 기반의 오픈소스 프로젝트로, Swagger(OpenAPI) JSON 파일을 파싱하여 API 문서를 자연어로 분할/임베딩하고, CLI 챗봇 형태로 질의응답이 가능한 RAG(Retrieval-Augmented Generation) 시스템입니다.
+A Kotlin + Spring Boot open-source project that parses Swagger (OpenAPI) JSON files, splits and embeds API documentation as natural language chunks, and enables Retrieval-Augmented Generation (RAG) Q&A via a CLI chatbot. Easily extensible to other interfaces (e.g., SlackBot).
 
-## 주요 기능
-- Swagger(OpenAPI) JSON 파일 파싱 및 API 설명 추출
-- 각 API를 자연어 문서 chunk로 변환 (임베딩/검색에 활용)
-- CLI 챗봇 인터페이스 제공 (MVP)
-- 향후 SlackBot 등 다양한 인터페이스로 확장 가능
+## Features
+- Parse Swagger (OpenAPI) JSON files and extract API descriptions
+- Convert each API into natural language document chunks (for embedding/search)
+- Provide a CLI chatbot interface (MVP)
+- Extensible to other interfaces (e.g., SlackBot) in the future
 
-## 디렉토리 구조
+## Directory Structure
 ```
 swagger-rag/
 ├── build.gradle.kts
@@ -26,7 +26,8 @@ swagger-rag/
 │   │   │   ├── usecase/
 │   │   │   │   ├── ParseSwaggerUseCase.kt
 │   │   │   │   ├── GenerateChunkUseCase.kt
-│   │   │   │   └── QueryAnswerUseCase.kt
+│   │   │   │   ├── QueryAnswerUseCase.kt
+│   │   │   │   └── ChunkRepository.kt
 │   │   │   ├── domain/
 │   │   │   │   └── model/
 │   │   │   │       ├── ApiDocChunk.kt
@@ -34,33 +35,69 @@ swagger-rag/
 │   │   │   ├── adapter/
 │   │   │   │   ├── input/cli/
 │   │   │   │   └── output/embedding/
+│   │   │   │       └── OpenAIEmbeddingClient.kt
 │   │   │   └── infrastructure/
 │   │   │       └── FileLoader.kt
 │   └── test/
 │       └── kotlin/com/njhyuk/swagger/rag/
-│           └── SampleParseTest.kt
+│           ├── usecase/
+│           │   ├── GenerateChunkUseCaseTest.kt
+│           │   ├── ChunkRepositoryTest.kt
+│           │   ├── TextMatchScoreCalculatorTest.kt
+│           │   └── CosineSimilarityCalculatorTest.kt
+│           └── domain/
 └── src/main/resources/
     └── application.yml
 ```
 
-## 실행 방법
-```bash
+## Requirements
+- JDK 21 or higher
+- Gradle (wrapper included)
+- OpenAI API key (for embedding, set `OPENAI_API_KEY` environment variable)
+
+## Getting Started
+
+1. **Clone the repository:**
+   ```bash
+git clone https://github.com/your-username/swagger-rag.git
+cd swagger-rag
+```
+
+2. **Place your OpenAPI JSON file:**
+   - Put your Swagger/OpenAPI JSON file in the `openapi/` directory (e.g., `openapi/sample-api.json`).
+
+3. **Set your OpenAI API key:**
+   ```bash
+export OPENAI_API_KEY=your_openai_api_key
+```
+
+4. **Run the application:**
+   ```bash
 ./gradlew bootRun
 ```
 
-## 예시 입력/출력
+## Example CLI Usage
 ```
-> Swagger 파일을 불러왔습니다. 질문을 입력하세요.
-> GET /users API는 어떤 역할인가요?
-- [GET /users] 사용자 목록을 조회합니다. ...
+> Swagger file loaded. Please enter your question.
+> What does the GET /users API do?
+- [GET /users] Returns the list of users. ...
 ```
 
-## 테스트 실행
+## Running Tests
 ```bash
 ./gradlew test
 ```
 
----
+## Dependencies
+- Spring Boot 3.2+
+- Kotlin 1.9+
+- OpenAI Java Client
+- Ktor HTTP Client
+- H2 Database (for development/testing)
+- JUnit 5 (for testing)
+
+## Contributing
+Contributions are welcome! Please open issues or submit pull requests for bug fixes, new features, or improvements. For major changes, please open an issue first to discuss what you would like to change.
 
 ## License
 MIT 
