@@ -20,7 +20,7 @@ class ChatCommandLineController(
         val chunks = parseSwaggerUseCase.parse(file)
         chunkRepository.setChunks(chunks)
 
-        println("Swagger 파일을 불러왔습니다. 질문을 입력하세요.")
+        println("Swagger Files Loaded. Enter your question.")
         while (true) {
             print("> ")
             val input = readLine() ?: break

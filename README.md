@@ -58,7 +58,7 @@ swagger-rag/
 ## Getting Started
 
 1. **Clone the repository:**
-   ```bash
+```bash
 git clone https://github.com/your-username/swagger-rag.git
 cd swagger-rag
 ```
@@ -67,12 +67,12 @@ cd swagger-rag
    - Put your Swagger/OpenAPI JSON file in the `openapi/` directory (e.g., `openapi/sample-api.json`).
 
 3. **Set your OpenAI API key:**
-   ```bash
+```bash
 export OPENAI_API_KEY=your_openai_api_key
 ```
 
 4. **Run the application:**
-   ```bash
+```bash
 ./gradlew bootRun
 ```
 
