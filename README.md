@@ -90,15 +90,6 @@ docker-compose up -d
 - Kotlin 1.9.23
 - OpenAI Java Client 4.0.1
 - Ktor HTTP Client 3.0.0
-- H2 Database (for development/testing)
-- JUnit 5.10.2 (for testing)
-
-## Architecture
-The project follows a clean architecture approach with the following layers:
-- Domain: Core business logic and entities
-- Use Cases: Application-specific business rules
-- Adapters: Interface adapters for external systems
-- Infrastructure: Frameworks and external tools
 
 ## Contributing
 Contributions are welcome! Please open issues or submit pull requests for bug fixes, new features, or improvements. For major changes, please open an issue first to discuss what you would like to change.
