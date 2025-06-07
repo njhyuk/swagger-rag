@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.HttpStatusCode
+import java.util.concurrent.TimeUnit
 
 @Component
 class QdrantVectorStore(
@@ -29,6 +30,14 @@ class QdrantVectorStore(
     private val client: HttpClient = HttpClient(OkHttp) {
         install(ContentNegotiation) {
             jackson()
+        }
+        engine {
+            config {
+                connectTimeout(30, TimeUnit.SECONDS) // 30 seconds
+                readTimeout(30, TimeUnit.SECONDS) // 30 seconds
+                writeTimeout(30, TimeUnit.SECONDS) // 30 seconds
+                retryOnConnectionFailure(true)
+            }
         }
     }
     private val mapper: ObjectMapper = jacksonObjectMapper()
@@ -95,54 +104,63 @@ class QdrantVectorStore(
 
     override fun search(query: String, limit: Int): List<SearchResult> {
         val queryVector = embeddingClient.embed(query).map { it.toFloat() }
+        var retryCount = 0
+        val maxRetries = 3
 
-        return try {
-            val response = runBlocking {
-                client.post("$baseUrl/collections/$collectionName/points/search") {
-                    contentType(ContentType.Application.Json)
-                    setBody(
-                        mapOf(
-                            "vector" to queryVector,
-                            "limit" to limit,
-                            "score_threshold" to 0.5,
-                            "with_payload" to true
+        while (true) {
+            try {
+                val response = runBlocking {
+                    client.post("$baseUrl/collections/$collectionName/points/search") {
+                        contentType(ContentType.Application.Json)
+                        setBody(
+                            mapOf(
+                                "vector" to queryVector,
+                                "limit" to limit,
+                                "score_threshold" to 0.5,
+                                "with_payload" to true
+                            )
                         )
-                    )
-                }
-            }
-            val responseText = runBlocking { response.bodyAsText() }
-            val searchResponse = mapper.readTree(responseText)
-
-            if (!searchResponse.has("result") || searchResponse.get("result").isEmpty) {
-                return emptyList()
-            }
-
-            searchResponse.get("result").mapNotNull { result ->
-                try {
-                    if (!result.has("payload") || result.get("payload").isNull) {
-                        return@mapNotNull null
                     }
-
-                    val payload = result.get("payload")
-                    if (!payload.has("path") || !payload.has("method") || !payload.has("text")) {
-                        return@mapNotNull null
-                    }
-
-                    SearchResult(
-                        chunk = ApiDocChunk(
-                            path = payload.get("path").asText(),
-                            method = payload.get("method").asText(),
-                            text = payload.get("text").asText(),
-                            embedding = null
-                        ),
-                        score = result.get("score").asDouble()
-                    )
-                } catch (e: Exception) {
-                    null
                 }
+                val responseText = runBlocking { response.bodyAsText() }
+                val searchResponse = mapper.readTree(responseText)
+
+                if (!searchResponse.has("result") || searchResponse.get("result").isEmpty) {
+                    return emptyList()
+                }
+
+                return searchResponse.get("result").mapNotNull { result ->
+                    try {
+                        if (!result.has("payload") || result.get("payload").isNull) {
+                            return@mapNotNull null
+                        }
+
+                        val payload = result.get("payload")
+                        if (!payload.has("path") || !payload.has("method") || !payload.has("text")) {
+                            return@mapNotNull null
+                        }
+
+                        SearchResult(
+                            chunk = ApiDocChunk(
+                                path = payload.get("path").asText(),
+                                method = payload.get("method").asText(),
+                                text = payload.get("text").asText(),
+                                embedding = null
+                            ),
+                            score = result.get("score").asDouble()
+                        )
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+            } catch (e: Exception) {
+                if (retryCount < maxRetries) {
+                    retryCount++
+                    Thread.sleep(1000L * retryCount) // Exponential backoff
+                    continue
+                }
+                throw RuntimeException("Error during vector search after $maxRetries retries", e)
             }
-        } catch (e: Exception) {
-            throw RuntimeException("Error during vector search", e)
         }
     }
 
