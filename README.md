@@ -51,7 +51,7 @@ Registers a new product in the system.
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/your-username/swagger-rag.git
+git clone https://github.com/njhyuk/swagger-rag.git
 cd swagger-rag
 ```
 
