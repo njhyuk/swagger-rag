@@ -7,6 +7,7 @@ import com.aallam.openai.client.OpenAIConfig
 import com.njhyuk.swagger.rag.adapter.output.embedding.OpenAIEmbeddingClient
 import com.njhyuk.swagger.rag.adapter.output.vectorstore.QdrantVectorStore
 import com.njhyuk.swagger.rag.adapter.output.vectorstore.VectorStore
+import io.ktor.client.HttpClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -32,18 +33,19 @@ class UseCaseConfig {
     }
 
     @Bean
-    fun answerStrategy(embeddingClient: OpenAIEmbeddingClient): AnswerStrategy {
+    fun answerStrategy(embeddingClient: OpenAIEmbeddingClient, qdrantHttpClient: HttpClient): AnswerStrategy {
         return HybridSearchStrategy(
-            vectorStore = vectorStore(embeddingClient),
+            vectorStore = vectorStore(embeddingClient, qdrantHttpClient),
         )
     }
 
     @Bean
-    fun vectorStore(embeddingClient: OpenAIEmbeddingClient): VectorStore {
+    fun vectorStore(embeddingClient: OpenAIEmbeddingClient, qdrantHttpClient: HttpClient): VectorStore {
         return QdrantVectorStore(
             host = qdrantHost,
             port = qdrantPort,
-            embeddingClient = embeddingClient
+            embeddingClient = embeddingClient,
+            httpClient = qdrantHttpClient,
         )
     }
 } 

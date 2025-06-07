@@ -4,69 +4,64 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.njhyuk.swagger.rag.adapter.output.embedding.OpenAIEmbeddingClient
 import com.njhyuk.swagger.rag.domain.model.ApiDocChunk
 import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.jackson.*
 import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.UUID
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.HttpStatusCode
-import java.util.concurrent.TimeUnit
 
 @Component
 class QdrantVectorStore(
     @Value("\${qdrant.host:localhost}") private val host: String,
     @Value("\${qdrant.port:6333}") private val port: Int,
-    private val embeddingClient: OpenAIEmbeddingClient
+    private val embeddingClient: OpenAIEmbeddingClient,
+    private val httpClient: HttpClient
 ) : VectorStore {
-    private val collectionName = "api_docs"
-    private val vectorSize = 1536 // OpenAI ada-002 embedding size
-    private val baseUrl = "http://$host:$port"
-    private val client: HttpClient = HttpClient(OkHttp) {
-        install(ContentNegotiation) {
-            jackson()
-        }
-        engine {
-            config {
-                connectTimeout(30, TimeUnit.SECONDS) // 30 seconds
-                readTimeout(30, TimeUnit.SECONDS) // 30 seconds
-                writeTimeout(30, TimeUnit.SECONDS) // 30 seconds
-                retryOnConnectionFailure(true)
-            }
-        }
+    companion object {
+        private const val COLLECTION_NAME = "api_docs"
+        private const val VECTOR_SIZE = 1536 // OpenAI ada-002 embedding size
+        private const val MAX_RETRIES = 3
+        private const val SCORE_THRESHOLD = 0.5
     }
+
+    private val baseUrl = "http://$host:$port"
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
     init {
         runBlocking {
-            try {
-                // Check if collection exists
-                val checkResponse = client.get("$baseUrl/collections/$collectionName")
-                if (checkResponse.status == HttpStatusCode.NotFound) {
-                    // Create collection
-                    val createResponse = client.put("$baseUrl/collections/$collectionName") {
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            mapOf(
-                                "vectors" to mapOf(
-                                    "size" to vectorSize,
-                                    "distance" to "Cosine"
-                                )
-                            )
-                        )
-                    }
-                    if (createResponse.status != HttpStatusCode.OK) {
-                        throw RuntimeException("Failed to create collection: ${createResponse.status}")
-                    }
-                }
-            } catch (e: Exception) {
-                throw RuntimeException("Error during collection initialization", e)
+            initializeCollection()
+        }
+    }
+
+    private suspend fun initializeCollection() {
+        try {
+            val checkResponse = httpClient.get("$baseUrl/collections/$COLLECTION_NAME")
+            if (checkResponse.status == HttpStatusCode.NotFound) {
+                createCollection()
             }
+        } catch (e: Exception) {
+            throw QdrantException("Error during collection initialization", e)
+        }
+    }
+
+    private suspend fun createCollection() {
+        val createResponse = httpClient.put("$baseUrl/collections/$COLLECTION_NAME") {
+            contentType(ContentType.Application.Json)
+            setBody(
+                mapOf(
+                    "vectors" to mapOf(
+                        "size" to VECTOR_SIZE,
+                        "distance" to "Cosine"
+                    )
+                )
+            )
+        }
+        if (createResponse.status != HttpStatusCode.OK) {
+            throw QdrantException("Failed to create collection: ${createResponse.status}")
         }
     }
 
@@ -74,7 +69,7 @@ class QdrantVectorStore(
         val points = chunks.map { chunk ->
             val embedding = chunk.embedding?.map { it.toFloat() } ?: emptyList()
             if (embedding.isEmpty()) {
-                throw RuntimeException("Empty embedding for chunk ${chunk.method} ${chunk.path}")
+                throw QdrantException("Empty embedding for chunk ${chunk.method} ${chunk.path}")
             }
             mapOf(
                 "id" to UUID.randomUUID().toString(),
@@ -89,15 +84,15 @@ class QdrantVectorStore(
 
         runBlocking {
             try {
-                val response = client.put("$baseUrl/collections/$collectionName/points") {
+                val response = httpClient.put("$baseUrl/collections/$COLLECTION_NAME/points") {
                     contentType(ContentType.Application.Json)
                     setBody(mapOf("points" to points))
                 }
                 if (response.status != HttpStatusCode.OK) {
-                    throw RuntimeException("Failed to store points: ${response.status}")
+                    throw QdrantException("Failed to store points: ${response.status}")
                 }
             } catch (e: Exception) {
-                throw RuntimeException("Error storing points in Qdrant", e)
+                throw QdrantException("Error storing points in Qdrant", e)
             }
         }
     }
@@ -105,61 +100,64 @@ class QdrantVectorStore(
     override fun search(query: String, limit: Int): List<SearchResult> {
         val queryVector = embeddingClient.embed(query).map { it.toFloat() }
         var retryCount = 0
-        val maxRetries = 3
 
         while (true) {
             try {
-                val response = runBlocking {
-                    client.post("$baseUrl/collections/$collectionName/points/search") {
+                return runBlocking {
+                    val response = httpClient.post("$baseUrl/collections/$COLLECTION_NAME/points/search") {
                         contentType(ContentType.Application.Json)
                         setBody(
                             mapOf(
                                 "vector" to queryVector,
                                 "limit" to limit,
-                                "score_threshold" to 0.5,
+                                "score_threshold" to SCORE_THRESHOLD,
                                 "with_payload" to true
                             )
                         )
                     }
-                }
-                val responseText = runBlocking { response.bodyAsText() }
-                val searchResponse = mapper.readTree(responseText)
-
-                if (!searchResponse.has("result") || searchResponse.get("result").isEmpty) {
-                    return emptyList()
-                }
-
-                return searchResponse.get("result").mapNotNull { result ->
-                    try {
-                        if (!result.has("payload") || result.get("payload").isNull) {
-                            return@mapNotNull null
-                        }
-
-                        val payload = result.get("payload")
-                        if (!payload.has("path") || !payload.has("method") || !payload.has("text")) {
-                            return@mapNotNull null
-                        }
-
-                        SearchResult(
-                            chunk = ApiDocChunk(
-                                path = payload.get("path").asText(),
-                                method = payload.get("method").asText(),
-                                text = payload.get("text").asText(),
-                                embedding = null
-                            ),
-                            score = result.get("score").asDouble()
-                        )
-                    } catch (e: Exception) {
-                        null
-                    }
+                    parseSearchResponse(response)
                 }
             } catch (e: Exception) {
-                if (retryCount < maxRetries) {
+                if (retryCount < MAX_RETRIES) {
                     retryCount++
                     Thread.sleep(1000L * retryCount) // Exponential backoff
                     continue
                 }
-                throw RuntimeException("Error during vector search after $maxRetries retries", e)
+                throw QdrantException("Error during vector search after $MAX_RETRIES retries", e)
+            }
+        }
+    }
+
+    private suspend fun parseSearchResponse(response: HttpResponse): List<SearchResult> {
+        val responseText = response.bodyAsText()
+        val searchResponse = mapper.readTree(responseText)
+
+        if (!searchResponse.has("result") || searchResponse.get("result").isEmpty) {
+            return emptyList()
+        }
+
+        return searchResponse.get("result").mapNotNull { result ->
+            try {
+                if (!result.has("payload") || result.get("payload").isNull) {
+                    return@mapNotNull null
+                }
+
+                val payload = result.get("payload")
+                if (!payload.has("path") || !payload.has("method") || !payload.has("text")) {
+                    return@mapNotNull null
+                }
+
+                SearchResult(
+                    chunk = ApiDocChunk(
+                        path = payload.get("path").asText(),
+                        method = payload.get("method").asText(),
+                        text = payload.get("text").asText(),
+                        embedding = null
+                    ),
+                    score = result.get("score").asDouble()
+                )
+            } catch (e: Exception) {
+                null
             }
         }
     }
@@ -167,29 +165,15 @@ class QdrantVectorStore(
     override fun clear() {
         try {
             runBlocking {
-                val response = client.delete("$baseUrl/collections/$collectionName")
+                val response = httpClient.delete("$baseUrl/collections/$COLLECTION_NAME")
                 if (response.status == HttpStatusCode.OK) {
-                    // Recreate the collection
-                    val createResponse = client.put("$baseUrl/collections/$collectionName") {
-                        contentType(ContentType.Application.Json)
-                        setBody(
-                            mapOf(
-                                "vectors" to mapOf(
-                                    "size" to vectorSize,
-                                    "distance" to "Cosine"
-                                )
-                            )
-                        )
-                    }
-                    if (createResponse.status != HttpStatusCode.OK) {
-                        throw RuntimeException("Failed to recreate collection: ${createResponse.status}")
-                    }
+                    createCollection()
                 } else {
-                    throw RuntimeException("Failed to clear collection: ${response.status}")
+                    throw QdrantException("Failed to clear collection: ${response.status}")
                 }
             }
         } catch (e: Exception) {
-            throw RuntimeException("Error clearing Qdrant collection", e)
+            throw QdrantException("Error clearing Qdrant collection", e)
         }
     }
 }
