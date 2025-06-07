@@ -1,4 +1,4 @@
-package com.njhyuk.swagger.rag.usecase
+package com.njhyuk.swagger.rag.infrastructure
 
 import com.njhyuk.swagger.rag.domain.model.ApiDocChunk
 import org.springframework.stereotype.Component
@@ -13,4 +13,4 @@ class ChunkRepository {
     }
 
     fun getChunks(): List<ApiDocChunk> = chunksRef.get()
-} 
+}

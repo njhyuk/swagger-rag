@@ -1,6 +1,7 @@
 package com.njhyuk.swagger.rag.usecase
 
 import com.njhyuk.swagger.rag.domain.model.ApiDocChunk
+import com.njhyuk.swagger.rag.infrastructure.ChunkRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

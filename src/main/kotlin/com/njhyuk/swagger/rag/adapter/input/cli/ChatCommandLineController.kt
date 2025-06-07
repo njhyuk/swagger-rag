@@ -1,4 +1,4 @@
-package com.njhyuk.swagger.rag.controller
+package com.njhyuk.swagger.rag.adapter.input.cli
 
 import com.njhyuk.swagger.rag.service.ChatService
 import com.njhyuk.swagger.rag.service.SwaggerLoader
@@ -18,7 +18,7 @@ class ChatCommandLineController(
         chatService.initialize(chunks)
 
         println("Swagger Files Loaded. Enter your question.")
-        
+
         while (true) {
             print("> ")
             val input = readLine() ?: break
@@ -27,4 +27,4 @@ class ChatCommandLineController(
             println(answer)
         }
     }
-} 
+}
