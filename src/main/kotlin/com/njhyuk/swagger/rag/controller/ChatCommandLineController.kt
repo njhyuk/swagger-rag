@@ -12,6 +12,8 @@ class ChatCommandLineController(
 ) : CommandLineRunner {
     override fun run(vararg args: String?) {
         // Swagger 파일들 로드 및 초기화
+        println("Loading chat...")
+
         val chunks = swaggerLoader.loadAll()
         chatService.initialize(chunks)
 

@@ -1,9 +1,11 @@
 package com.njhyuk.swagger.rag.adapter.output.embedding
 
 import com.aallam.openai.api.embedding.EmbeddingRequest
+import com.aallam.openai.api.logging.LogLevel
 import com.aallam.openai.client.OpenAI
 import com.aallam.openai.client.OpenAIConfig
 import com.aallam.openai.api.model.ModelId
+import com.aallam.openai.client.LoggingConfig
 import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Component
 
@@ -11,7 +13,12 @@ import org.springframework.stereotype.Component
 class OpenAIEmbeddingClient {
     private val apiKey: String = System.getenv("OPENAI_API_KEY")
         ?: throw IllegalStateException("OPENAI_API_KEY 환경변수가 설정되어 있지 않습니다.")
-    private val openAI = OpenAI(OpenAIConfig(token = apiKey))
+    private val openAI = OpenAI(
+        OpenAIConfig(
+            token = apiKey,
+            logging = LoggingConfig(logLevel = LogLevel.None),
+        )
+    )
     private val model = ModelId("text-embedding-ada-002")
 
     fun embed(text: String): List<Double> = runBlocking {
