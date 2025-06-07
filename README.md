@@ -54,6 +54,7 @@ swagger-rag/
 - JDK 21 or higher
 - Gradle (wrapper included)
 - OpenAI API key (for embedding, set `OPENAI_API_KEY` environment variable)
+- Docker (for Qdrant Vector DB)
 
 ## Getting Started
 
@@ -74,6 +75,11 @@ export OPENAI_API_KEY=your_openai_api_key
 4. **Run the application:**
 ```bash
 ./gradlew bootRun
+```
+
+5. **Qdrant Vector DB (Required):**
+```bash
+docker-compose up -d
 ```
 
 ## Example CLI Usage

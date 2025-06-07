@@ -1,0 +1,196 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Orders API",
+    "version": "1.0.0",
+    "description": "주문 관리 API"
+  },
+  "paths": {
+    "/orders": {
+      "get": {
+        "summary": "주문 목록 조회",
+        "description": "등록된 모든 주문을 반환합니다.",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "사용자 ID로 필터링"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "주문 상태로 필터링"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공적으로 주문 목록을 반환함",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Order"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "새 주문 생성",
+        "description": "새로운 주문을 생성합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrderCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "주문이 성공적으로 생성됨"
+          }
+        }
+      }
+    },
+    "/orders/{id}": {
+      "get": {
+        "summary": "특정 주문 조회",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "주문 ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공적으로 주문 정보를 반환함",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          },
+          "404": { "description": "주문을 찾을 수 없음" }
+        }
+      },
+      "patch": {
+        "summary": "주문 상태 업데이트",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "주문 ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["PENDING", "PROCESSING", "COMPLETED", "CANCELLED"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "주문 상태가 성공적으로 업데이트됨"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Order": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "주문 고유 식별자"
+          },
+          "user_id": {
+            "type": "string",
+            "description": "주문한 사용자 ID"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItem"
+            }
+          },
+          "total_amount": {
+            "type": "number",
+            "description": "총 주문 금액"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "PROCESSING", "COMPLETED", "CANCELLED"],
+            "description": "주문 상태"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "주문 생성 시간"
+          }
+        },
+        "required": ["user_id", "items", "total_amount", "status"]
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "product_id": {
+            "type": "string",
+            "description": "상품 ID"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "주문 수량"
+          },
+          "price": {
+            "type": "number",
+            "description": "상품 가격"
+          }
+        },
+        "required": ["product_id", "quantity", "price"]
+      },
+      "OrderCreate": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "description": "주문하는 사용자 ID"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItem"
+            }
+          }
+        },
+        "required": ["user_id", "items"]
+      }
+    }
+  }
+} 

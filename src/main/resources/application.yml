@@ -1,3 +1,7 @@
 spring:
-  main:
-    banner-mode: "off" 
+  application:
+    name: swagger-rag
+
+qdrant:
+  host: localhost
+  port: 6333

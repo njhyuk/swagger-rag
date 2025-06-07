@@ -1,0 +1,131 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Products API",
+    "version": "1.0.0",
+    "description": "상품 관리 API"
+  },
+  "paths": {
+    "/products": {
+      "get": {
+        "summary": "상품 목록 조회",
+        "description": "등록된 모든 상품을 반환합니다.",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "상품 카테고리로 필터링"
+          },
+          {
+            "name": "price_min",
+            "in": "query",
+            "schema": { "type": "number" },
+            "description": "최소 가격"
+          },
+          {
+            "name": "price_max",
+            "in": "query",
+            "schema": { "type": "number" },
+            "description": "최대 가격"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공적으로 상품 목록을 반환함",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Product"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "새 상품 등록",
+        "description": "새로운 상품을 시스템에 등록합니다.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Product"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "상품이 성공적으로 생성됨"
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "특정 상품 조회",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "상품 ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공적으로 상품 정보를 반환함",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "404": { "description": "상품을 찾을 수 없음" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "상품 고유 식별자"
+          },
+          "name": {
+            "type": "string",
+            "description": "상품명"
+          },
+          "description": {
+            "type": "string",
+            "description": "상품 설명"
+          },
+          "price": {
+            "type": "number",
+            "description": "상품 가격"
+          },
+          "category": {
+            "type": "string",
+            "description": "상품 카테고리"
+          },
+          "stock": {
+            "type": "integer",
+            "description": "재고 수량"
+          }
+        },
+        "required": ["name", "price", "category"]
+      }
+    }
+  }
+} 

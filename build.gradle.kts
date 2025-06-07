@@ -32,6 +32,10 @@ dependencies {
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
 	implementation("com.aallam.openai:openai-client:4.0.1")
 	implementation("io.ktor:ktor-client-okhttp:3.0.0")
+	implementation("io.ktor:ktor-client-core:3.0.0")
+	implementation("io.ktor:ktor-client-content-negotiation:3.0.0")
+	implementation("io.ktor:ktor-serialization-jackson:3.0.0")
+	implementation("io.ktor:ktor-client-logging:3.0.0")
 }
 
 kotlin {
