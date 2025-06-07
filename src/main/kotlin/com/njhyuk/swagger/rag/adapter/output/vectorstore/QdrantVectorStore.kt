@@ -34,13 +34,11 @@ class QdrantVectorStore(
     private val mapper: ObjectMapper = jacksonObjectMapper()
 
     init {
-        println("Initializing QdrantVectorStore...")
         runBlocking {
             try {
                 // Check if collection exists
                 val checkResponse = client.get("$baseUrl/collections/$collectionName")
                 if (checkResponse.status == HttpStatusCode.NotFound) {
-                    println("Collection does not exist, creating new collection...")
                     // Create collection
                     val createResponse = client.put("$baseUrl/collections/$collectionName") {
                         contentType(ContentType.Application.Json)
@@ -53,28 +51,21 @@ class QdrantVectorStore(
                             )
                         )
                     }
-                    if (createResponse.status == HttpStatusCode.OK) {
-                        println("Qdrant collection '$collectionName' created successfully")
-                    } else {
-                        println("Failed to create collection: ${createResponse.status}")
+                    if (createResponse.status != HttpStatusCode.OK) {
+                        throw RuntimeException("Failed to create collection: ${createResponse.status}")
                     }
-                } else {
-                    println("Qdrant collection '$collectionName' already exists")
                 }
             } catch (e: Exception) {
-                println("Error during collection initialization: ${e.message}")
-                e.printStackTrace()
+                throw RuntimeException("Error during collection initialization", e)
             }
         }
     }
 
     override fun store(chunks: List<ApiDocChunk>) {
-        println("Storing ${chunks.size} chunks in Qdrant...")
-
         val points = chunks.map { chunk ->
             val embedding = chunk.embedding?.map { it.toFloat() } ?: emptyList()
             if (embedding.isEmpty()) {
-                println("Warning: Empty embedding for chunk ${chunk.method} ${chunk.path}")
+                throw RuntimeException("Empty embedding for chunk ${chunk.method} ${chunk.path}")
             }
             mapOf(
                 "id" to UUID.randomUUID().toString(),
@@ -93,22 +84,17 @@ class QdrantVectorStore(
                     contentType(ContentType.Application.Json)
                     setBody(mapOf("points" to points))
                 }
-                if (response.status == HttpStatusCode.OK) {
-                    println("Successfully stored ${points.size} points in Qdrant")
-                } else {
-                    println("Failed to store points: ${response.status}")
+                if (response.status != HttpStatusCode.OK) {
+                    throw RuntimeException("Failed to store points: ${response.status}")
                 }
             } catch (e: Exception) {
-                println("Error storing points in Qdrant: ${e.message}")
-                e.printStackTrace()
+                throw RuntimeException("Error storing points in Qdrant", e)
             }
         }
     }
 
     override fun search(query: String, limit: Int): List<SearchResult> {
-        println("Searching for query: $query")
         val queryVector = embeddingClient.embed(query).map { it.toFloat() }
-        println("Generated query vector of size: ${queryVector.size}")
 
         return try {
             val response = runBlocking {
@@ -125,25 +111,20 @@ class QdrantVectorStore(
                 }
             }
             val responseText = runBlocking { response.bodyAsText() }
-            println("Qdrant search response: $responseText")
-
             val searchResponse = mapper.readTree(responseText)
 
             if (!searchResponse.has("result") || searchResponse.get("result").isEmpty) {
-                println("No results found in Qdrant response")
                 return emptyList()
             }
 
             searchResponse.get("result").mapNotNull { result ->
                 try {
                     if (!result.has("payload") || result.get("payload").isNull) {
-                        println("Warning: Result has no payload: $result")
                         return@mapNotNull null
                     }
 
                     val payload = result.get("payload")
                     if (!payload.has("path") || !payload.has("method") || !payload.has("text")) {
-                        println("Warning: Result payload is missing required fields: $payload")
                         return@mapNotNull null
                     }
 
@@ -157,15 +138,11 @@ class QdrantVectorStore(
                         score = result.get("score").asDouble()
                     )
                 } catch (e: Exception) {
-                    println("Error processing search result: ${e.message}")
-                    println("Problematic result: $result")
                     null
                 }
             }
         } catch (e: Exception) {
-            println("Error during vector search: ${e.message}")
-            e.printStackTrace()
-            emptyList()
+            throw RuntimeException("Error during vector search", e)
         }
     }
 
@@ -174,7 +151,6 @@ class QdrantVectorStore(
             runBlocking {
                 val response = client.delete("$baseUrl/collections/$collectionName")
                 if (response.status == HttpStatusCode.OK) {
-                    println("Cleared Qdrant collection '$collectionName'")
                     // Recreate the collection
                     val createResponse = client.put("$baseUrl/collections/$collectionName") {
                         contentType(ContentType.Application.Json)
@@ -187,18 +163,15 @@ class QdrantVectorStore(
                             )
                         )
                     }
-                    if (createResponse.status == HttpStatusCode.OK) {
-                        println("Recreated Qdrant collection '$collectionName'")
-                    } else {
-                        println("Failed to recreate collection: ${createResponse.status}")
+                    if (createResponse.status != HttpStatusCode.OK) {
+                        throw RuntimeException("Failed to recreate collection: ${createResponse.status}")
                     }
                 } else {
-                    println("Failed to clear collection: ${response.status}")
+                    throw RuntimeException("Failed to clear collection: ${response.status}")
                 }
             }
         } catch (e: Exception) {
-            println("Error clearing Qdrant collection: ${e.message}")
-            e.printStackTrace()
+            throw RuntimeException("Error clearing Qdrant collection", e)
         }
     }
 }

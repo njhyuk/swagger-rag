@@ -29,10 +29,9 @@ class UseCaseConfig {
     }
 
     @Bean
-    fun answerStrategy(openAI: OpenAI, embeddingClient: OpenAIEmbeddingClient): AnswerStrategy {
+    fun answerStrategy(embeddingClient: OpenAIEmbeddingClient): AnswerStrategy {
         return HybridSearchStrategy(
             vectorStore = vectorStore(embeddingClient),
-            openAI = openAI
         )
     }
 
