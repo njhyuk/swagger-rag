@@ -13,21 +13,32 @@ A Kotlin + Spring Boot open-source project that parses Swagger (OpenAPI) JSON fi
 ## Usage Demo
 
 ```bash
-> What does the GET /users API do?
-- [GET /users] Returns a list of users. The response includes user details such as id, name, email, and role.
-
 > How do I create a new user?
-- [POST /users] Creates a new user. Required fields in the request body:
-  - name (string): User's full name
-  - email (string): User's email address
-  - role (string): User's role (ADMIN/USER)
+Found 3 relevant APIs:
 
-> What are the available query parameters for GET /users?
-- [GET /users] Supports the following query parameters:
-  - page (integer): Page number for pagination
-  - size (integer): Number of items per page
-  - role (string): Filter users by role
-  - search (string): Search users by name or email
+1. [POST] /users
+   Register New User
+Registers a new user in the system.
+
+**Responses:**
+[201] User successfully created
+   Relevance score: 0.81
+
+2. [POST] /orders
+   Create New Order
+Creates a new order.
+
+**Responses:**
+[201] Order successfully created
+   Relevance score: 0.72
+
+3. [POST] /products
+   Register New Product
+Registers a new product in the system.
+
+**Responses:**
+[201] Product successfully created
+   Relevance score: 0.72
 ```
 
 ## Requirements

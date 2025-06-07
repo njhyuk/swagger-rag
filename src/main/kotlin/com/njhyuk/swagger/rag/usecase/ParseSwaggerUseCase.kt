@@ -56,7 +56,6 @@ class ParseSwaggerUseCase(
                 
                 // API 문서 텍스트 생성
                 val text = buildString {
-                    appendLine("### $method $path")
                     appendLine(summary)
                     if (description.isNotBlank()) appendLine(description)
                     if (parameters.isNotEmpty()) appendLine("\n**Parameters:**\n${parameters.joinToString("\n")}")
