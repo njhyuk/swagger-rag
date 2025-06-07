@@ -7,47 +7,27 @@ A Kotlin + Spring Boot open-source project that parses Swagger (OpenAPI) JSON fi
 - Convert each API into natural language document chunks (for embedding/search)
 - Provide a CLI chatbot interface (MVP)
 - Extensible to other interfaces (e.g., SlackBot) in the future
+- Vector similarity search for accurate API documentation retrieval
+- Natural language processing for better query understanding
 
-## Directory Structure
-```
-swagger-rag/
-├── build.gradle.kts
-├── settings.gradle.kts
-├── README.md
-├── openapi/
-│   └── sample-api.json
-├── src/
-│   ├── main/
-│   │   ├── kotlin/com/njhyuk/swagger/rag/
-│   │   │   ├── Application.kt
-│   │   │   ├── config/
-│   │   │   ├── controller/
-│   │   │   │   └── ChatCommandLineController.kt
-│   │   │   ├── usecase/
-│   │   │   │   ├── ParseSwaggerUseCase.kt
-│   │   │   │   ├── GenerateChunkUseCase.kt
-│   │   │   │   ├── QueryAnswerUseCase.kt
-│   │   │   │   └── ChunkRepository.kt
-│   │   │   ├── domain/
-│   │   │   │   └── model/
-│   │   │   │       ├── ApiDocChunk.kt
-│   │   │   │       └── ChatQuery.kt
-│   │   │   ├── adapter/
-│   │   │   │   ├── input/cli/
-│   │   │   │   └── output/embedding/
-│   │   │   │       └── OpenAIEmbeddingClient.kt
-│   │   │   └── infrastructure/
-│   │   │       └── FileLoader.kt
-│   └── test/
-│       └── kotlin/com/njhyuk/swagger/rag/
-│           ├── usecase/
-│           │   ├── GenerateChunkUseCaseTest.kt
-│           │   ├── ChunkRepositoryTest.kt
-│           │   ├── TextMatchScoreCalculatorTest.kt
-│           │   └── CosineSimilarityCalculatorTest.kt
-│           └── domain/
-└── src/main/resources/
-    └── application.yml
+## Usage Demo
+
+```bash
+> What does the GET /users API do?
+- [GET /users] Returns a list of users. The response includes user details such as id, name, email, and role.
+
+> How do I create a new user?
+- [POST /users] Creates a new user. Required fields in the request body:
+  - name (string): User's full name
+  - email (string): User's email address
+  - role (string): User's role (ADMIN/USER)
+
+> What are the available query parameters for GET /users?
+- [GET /users] Supports the following query parameters:
+  - page (integer): Page number for pagination
+  - size (integer): Number of items per page
+  - role (string): Filter users by role
+  - search (string): Search users by name or email
 ```
 
 ## Requirements
@@ -72,14 +52,14 @@ cd swagger-rag
 export OPENAI_API_KEY=your_openai_api_key
 ```
 
-4. **Run the application:**
-```bash
-./gradlew bootRun
-```
-
-5. **Qdrant Vector DB (Required):**
+4. **Start Qdrant Vector DB:**
 ```bash
 docker-compose up -d
+```
+
+5. **Run the application:**
+```bash
+./gradlew bootRun
 ```
 
 ## Example CLI Usage
@@ -95,12 +75,19 @@ docker-compose up -d
 ```
 
 ## Dependencies
-- Spring Boot 3.2+
-- Kotlin 1.9+
-- OpenAI Java Client
-- Ktor HTTP Client
+- Spring Boot 3.2.5
+- Kotlin 1.9.23
+- OpenAI Java Client 4.0.1
+- Ktor HTTP Client 3.0.0
 - H2 Database (for development/testing)
-- JUnit 5 (for testing)
+- JUnit 5.10.2 (for testing)
+
+## Architecture
+The project follows a clean architecture approach with the following layers:
+- Domain: Core business logic and entities
+- Use Cases: Application-specific business rules
+- Adapters: Interface adapters for external systems
+- Infrastructure: Frameworks and external tools
 
 ## Contributing
 Contributions are welcome! Please open issues or submit pull requests for bug fixes, new features, or improvements. For major changes, please open an issue first to discuss what you would like to change.
