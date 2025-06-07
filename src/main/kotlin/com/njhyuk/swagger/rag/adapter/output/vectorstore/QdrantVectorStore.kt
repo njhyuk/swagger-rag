@@ -70,28 +70,37 @@ class QdrantVectorStore(
     override fun search(query: String, limit: Int): List<SearchResult> {
         val queryVector = embeddingClient.embed(query).map { it.toFloat() }
         
-        val response = runBlocking {
-            client.post("$baseUrl/collections/$collectionName/points/search") {
-                contentType(ContentType.Application.Json)
-                setBody(mapOf(
-                    "vector" to queryVector,
-                    "limit" to limit
-                ))
+        return try {
+            val response = runBlocking {
+                client.post("$baseUrl/collections/$collectionName/points/search") {
+                    contentType(ContentType.Application.Json)
+                    setBody(mapOf(
+                        "vector" to queryVector,
+                        "limit" to limit
+                    ))
+                }
             }
-        }
-        val responseText = runBlocking { response.bodyAsText() }
-        val searchResponse = mapper.readTree(responseText)
-        return searchResponse.get("result").map { result ->
-            val payload = result.get("payload")
-            SearchResult(
-                chunk = ApiDocChunk(
-                    path = payload.get("path").asText(),
-                    method = payload.get("method").asText(),
-                    text = payload.get("text").asText(),
-                    embedding = null
-                ),
-                score = result.get("score").asDouble()
-            )
+            val responseText = runBlocking { response.bodyAsText() }
+            val searchResponse = mapper.readTree(responseText)
+            
+            if (!searchResponse.has("result") || searchResponse.get("result").isEmpty) {
+                return emptyList()
+            }
+            
+            searchResponse.get("result").map { result ->
+                val payload = result.get("payload")
+                SearchResult(
+                    chunk = ApiDocChunk(
+                        path = payload.get("path").asText(),
+                        method = payload.get("method").asText(),
+                        text = payload.get("text").asText(),
+                        embedding = null
+                    ),
+                    score = result.get("score").asDouble()
+                )
+            }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

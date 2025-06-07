@@ -5,3 +5,7 @@ spring:
 qdrant:
   host: localhost
   port: 6333
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}

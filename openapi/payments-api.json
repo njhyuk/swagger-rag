@@ -3,30 +3,30 @@
   "info": {
     "title": "Payments API",
     "version": "1.0.0",
-    "description": "결제 관리 API"
+    "description": "Payment Management API"
   },
   "paths": {
     "/payments": {
       "get": {
-        "summary": "결제 목록 조회",
-        "description": "등록된 모든 결제 내역을 반환합니다.",
+        "summary": "Get Payment List",
+        "description": "Returns all registered payment records.",
         "parameters": [
           {
             "name": "order_id",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "주문 ID로 필터링"
+            "description": "Filter by order ID"
           },
           {
             "name": "status",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "결제 상태로 필터링"
+            "description": "Filter by payment status"
           }
         ],
         "responses": {
           "200": {
-            "description": "성공적으로 결제 목록을 반환함",
+            "description": "Successfully returned payment list",
             "content": {
               "application/json": {
                 "schema": {
@@ -41,8 +41,8 @@
         }
       },
       "post": {
-        "summary": "새 결제 생성",
-        "description": "새로운 결제를 생성합니다.",
+        "summary": "Create New Payment",
+        "description": "Creates a new payment.",
         "requestBody": {
           "required": true,
           "content": {
@@ -55,26 +55,26 @@
         },
         "responses": {
           "201": {
-            "description": "결제가 성공적으로 생성됨"
+            "description": "Payment successfully created"
           }
         }
       }
     },
     "/payments/{id}": {
       "get": {
-        "summary": "특정 결제 조회",
+        "summary": "Get Specific Payment",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "결제 ID"
+            "description": "Payment ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "성공적으로 결제 정보를 반환함",
+            "description": "Successfully returned payment information",
             "content": {
               "application/json": {
                 "schema": {
@@ -83,21 +83,21 @@
               }
             }
           },
-          "404": { "description": "결제를 찾을 수 없음" }
+          "404": { "description": "Payment not found" }
         }
       }
     },
     "/payments/{id}/refund": {
       "post": {
-        "summary": "결제 환불",
-        "description": "결제된 금액을 환불합니다.",
+        "summary": "Refund Payment",
+        "description": "Refunds the paid amount.",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "결제 ID"
+            "description": "Payment ID"
           }
         ],
         "requestBody": {
@@ -109,7 +109,7 @@
                 "properties": {
                   "reason": {
                     "type": "string",
-                    "description": "환불 사유"
+                    "description": "Refund reason"
                   }
                 }
               }
@@ -118,7 +118,7 @@
         },
         "responses": {
           "200": {
-            "description": "결제가 성공적으로 환불됨"
+            "description": "Payment successfully refunded"
           }
         }
       }
@@ -131,30 +131,30 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "결제 고유 식별자"
+            "description": "Unique payment identifier"
           },
           "order_id": {
             "type": "string",
-            "description": "주문 ID"
+            "description": "Order ID"
           },
           "amount": {
             "type": "number",
-            "description": "결제 금액"
+            "description": "Payment amount"
           },
           "payment_method": {
             "type": "string",
             "enum": ["CREDIT_CARD", "BANK_TRANSFER", "VIRTUAL_ACCOUNT"],
-            "description": "결제 수단"
+            "description": "Payment method"
           },
           "status": {
             "type": "string",
             "enum": ["PENDING", "COMPLETED", "FAILED", "REFUNDED"],
-            "description": "결제 상태"
+            "description": "Payment status"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
-            "description": "결제 생성 시간"
+            "description": "Payment creation time"
           }
         },
         "required": ["order_id", "amount", "payment_method", "status"]
@@ -164,12 +164,12 @@
         "properties": {
           "order_id": {
             "type": "string",
-            "description": "주문 ID"
+            "description": "Order ID"
           },
           "payment_method": {
             "type": "string",
             "enum": ["CREDIT_CARD", "BANK_TRANSFER", "VIRTUAL_ACCOUNT"],
-            "description": "결제 수단"
+            "description": "Payment method"
           }
         },
         "required": ["order_id", "payment_method"]

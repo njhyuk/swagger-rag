@@ -3,30 +3,30 @@
   "info": {
     "title": "Orders API",
     "version": "1.0.0",
-    "description": "주문 관리 API"
+    "description": "Order Management API"
   },
   "paths": {
     "/orders": {
       "get": {
-        "summary": "주문 목록 조회",
-        "description": "등록된 모든 주문을 반환합니다.",
+        "summary": "Get Order List",
+        "description": "Returns all registered orders.",
         "parameters": [
           {
             "name": "user_id",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "사용자 ID로 필터링"
+            "description": "Filter by user ID"
           },
           {
             "name": "status",
             "in": "query",
             "schema": { "type": "string" },
-            "description": "주문 상태로 필터링"
+            "description": "Filter by order status"
           }
         ],
         "responses": {
           "200": {
-            "description": "성공적으로 주문 목록을 반환함",
+            "description": "Successfully returned order list",
             "content": {
               "application/json": {
                 "schema": {
@@ -41,8 +41,8 @@
         }
       },
       "post": {
-        "summary": "새 주문 생성",
-        "description": "새로운 주문을 생성합니다.",
+        "summary": "Create New Order",
+        "description": "Creates a new order.",
         "requestBody": {
           "required": true,
           "content": {
@@ -55,26 +55,26 @@
         },
         "responses": {
           "201": {
-            "description": "주문이 성공적으로 생성됨"
+            "description": "Order successfully created"
           }
         }
       }
     },
     "/orders/{id}": {
       "get": {
-        "summary": "특정 주문 조회",
+        "summary": "Get Specific Order",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "주문 ID"
+            "description": "Order ID"
           }
         ],
         "responses": {
           "200": {
-            "description": "성공적으로 주문 정보를 반환함",
+            "description": "Successfully returned order information",
             "content": {
               "application/json": {
                 "schema": {
@@ -83,18 +83,18 @@
               }
             }
           },
-          "404": { "description": "주문을 찾을 수 없음" }
+          "404": { "description": "Order not found" }
         }
       },
       "patch": {
-        "summary": "주문 상태 업데이트",
+        "summary": "Update Order Status",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
             "schema": { "type": "string" },
-            "description": "주문 ID"
+            "description": "Order ID"
           }
         ],
         "requestBody": {
@@ -115,7 +115,7 @@
         },
         "responses": {
           "200": {
-            "description": "주문 상태가 성공적으로 업데이트됨"
+            "description": "Order status successfully updated"
           }
         }
       }
@@ -128,11 +128,11 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "주문 고유 식별자"
+            "description": "Unique order identifier"
           },
           "user_id": {
             "type": "string",
-            "description": "주문한 사용자 ID"
+            "description": "ID of the user who placed the order"
           },
           "items": {
             "type": "array",
@@ -142,17 +142,17 @@
           },
           "total_amount": {
             "type": "number",
-            "description": "총 주문 금액"
+            "description": "Total order amount"
           },
           "status": {
             "type": "string",
             "enum": ["PENDING", "PROCESSING", "COMPLETED", "CANCELLED"],
-            "description": "주문 상태"
+            "description": "Order status"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
-            "description": "주문 생성 시간"
+            "description": "Order creation time"
           }
         },
         "required": ["user_id", "items", "total_amount", "status"]
@@ -162,15 +162,15 @@
         "properties": {
           "product_id": {
             "type": "string",
-            "description": "상품 ID"
+            "description": "Product ID"
           },
           "quantity": {
             "type": "integer",
-            "description": "주문 수량"
+            "description": "Order quantity"
           },
           "price": {
             "type": "number",
-            "description": "상품 가격"
+            "description": "Product price"
           }
         },
         "required": ["product_id", "quantity", "price"]
@@ -180,7 +180,7 @@
         "properties": {
           "user_id": {
             "type": "string",
-            "description": "주문하는 사용자 ID"
+            "description": "ID of the user placing the order"
           },
           "items": {
             "type": "array",

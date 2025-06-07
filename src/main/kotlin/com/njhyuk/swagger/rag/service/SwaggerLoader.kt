@@ -19,6 +19,10 @@ class SwaggerLoader(
         openapiDir.listFiles { file -> file.name.endsWith(".json") }?.forEach { file ->
             println("Loading ${file.name}...")
             val chunks = parseSwaggerUseCase.parse(file)
+            println("Found ${chunks.size} API endpoints in ${file.name}")
+            chunks.forEach { chunk ->
+                println("  - [${chunk.method.uppercase()}] ${chunk.path}")
+            }
             allChunks.addAll(chunks)
         }
 
@@ -26,6 +30,7 @@ class SwaggerLoader(
             throw IllegalStateException("로드된 API 문서가 없습니다.")
         }
 
+        println("\nTotal loaded APIs: ${allChunks.size}")
         return allChunks
     }
 } 

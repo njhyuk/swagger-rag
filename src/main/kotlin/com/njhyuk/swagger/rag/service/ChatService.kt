@@ -3,6 +3,7 @@ package com.njhyuk.swagger.rag.service
 import com.njhyuk.swagger.rag.domain.model.ApiDocChunk
 import com.njhyuk.swagger.rag.usecase.QueryAnswerUseCase
 import com.njhyuk.swagger.rag.usecase.ChunkRepository
+import kotlinx.coroutines.runBlocking
 import org.springframework.stereotype.Service
 
 @Service
@@ -15,7 +16,9 @@ class ChatService(
     }
 
     fun processQuestion(question: String): String {
-        return queryAnswerUseCase.answer(question)
+        return runBlocking {
+            queryAnswerUseCase.execute(question, chunkRepository.getChunks())
+        }
     }
 
     fun getLoadedApiCount(): Int {

@@ -5,12 +5,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class QueryAnswerUseCase(
-    private val chunkRepository: ChunkRepository,
     private val answerStrategy: AnswerStrategy
 ) {
-    fun answer(query: String): String {
-        val chunks = chunkRepository.getChunks()
-        if (chunks.isEmpty()) return "No API docs loaded."
+    suspend fun execute(query: String, chunks: List<ApiDocChunk>): String {
         return answerStrategy.answer(query, chunks)
     }
 } 
