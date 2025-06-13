@@ -6,6 +6,6 @@ qdrant:
   host: localhost
   port: 6333
 
-openai:
-  api:
-    key: ${OPENAI_API_KEY}
+ollama:
+  host: localhost
+  port: 11434

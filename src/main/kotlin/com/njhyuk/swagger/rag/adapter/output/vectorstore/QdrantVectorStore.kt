@@ -1,7 +1,7 @@
 package com.njhyuk.swagger.rag.adapter.output.vectorstore
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.njhyuk.swagger.rag.adapter.output.embedding.OpenAIEmbeddingClient
+import com.njhyuk.swagger.rag.adapter.output.embedding.OllamaEmbeddingClient
 import com.njhyuk.swagger.rag.domain.model.ApiDocChunk
 import io.ktor.client.*
 import io.ktor.client.request.*
@@ -13,17 +13,18 @@ import org.springframework.stereotype.Component
 import java.util.UUID
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.ktor.http.HttpStatusCode
+import org.springframework.beans.factory.annotation.Qualifier
 
 @Component
 class QdrantVectorStore(
     @Value("\${qdrant.host:localhost}") private val host: String,
     @Value("\${qdrant.port:6333}") private val port: Int,
-    private val embeddingClient: OpenAIEmbeddingClient,
-    private val httpClient: HttpClient
+    private val embeddingClient: OllamaEmbeddingClient,
+    @Qualifier("qdrantHttpClient") private val httpClient: HttpClient
 ) : VectorStore {
     companion object {
         private const val COLLECTION_NAME = "api_docs"
-        private const val VECTOR_SIZE = 1536 // OpenAI ada-002 embedding size
+        private const val VECTOR_SIZE = 768 // ollama nomic-embed-text embedding size
         private const val MAX_RETRIES = 3
         private const val SCORE_THRESHOLD = 0.5
     }

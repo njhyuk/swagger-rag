@@ -30,7 +30,6 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
-	implementation("com.aallam.openai:openai-client:4.0.1")
 	implementation("io.ktor:ktor-client-okhttp:3.0.0")
 	implementation("io.ktor:ktor-client-core:3.0.0")
 	implementation("io.ktor:ktor-client-content-negotiation:3.0.0")

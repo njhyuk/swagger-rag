@@ -2,7 +2,7 @@ package com.njhyuk.swagger.rag.usecase
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.njhyuk.swagger.rag.adapter.output.embedding.OpenAIEmbeddingClient
+import com.njhyuk.swagger.rag.adapter.output.embedding.OllamaEmbeddingClient
 import com.njhyuk.swagger.rag.domain.model.ApiDocChunk
 import org.springframework.stereotype.Service
 import java.io.File
@@ -10,7 +10,7 @@ import java.io.File
 @Service
 class ParseSwaggerUseCase(
     private val objectMapper: ObjectMapper,
-    private val embeddingClient: OpenAIEmbeddingClient
+    private val embeddingClient: OllamaEmbeddingClient
 ) {
     fun parse(file: File): List<ApiDocChunk> {
         val root: JsonNode = objectMapper.readTree(file)
